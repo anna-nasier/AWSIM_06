@@ -19,6 +19,7 @@ using RGLUnityPlugin;
 using ROS2;
 using UnityEngine.Profiling;
 using System;
+using System.Linq;
 
 
 namespace AWSIM
@@ -47,7 +48,6 @@ namespace AWSIM
         private RGLNodeSequence rglSubgraphScan;
 
         private byte[] scanData;
-        // private float[] scanData;
         private LidarSensor lidarSensor;
 
         private void Start()
@@ -65,15 +65,15 @@ namespace AWSIM
             scanSensorMsg.SetHeaderFrame(frameID);
             scanSensorMsg.Angle_min = lidarSensor.configuration.minHAngle * Mathf.Deg2Rad;
             scanSensorMsg.Angle_max = lidarSensor.configuration.maxHAngle * Mathf.Deg2Rad;
-            scanSensorMsg.Angle_increment =  (lidarSensor.configuration.maxHAngle - lidarSensor.configuration.minHAngle) * Mathf.Deg2Rad / (lidarSensor.configuration.horizontalSteps - 1);
+            scanSensorMsg.Angle_increment =  (lidarSensor.configuration.maxHAngle - lidarSensor.configuration.minHAngle) * Mathf.Deg2Rad / (lidarSensor.configuration.HorizontalSteps - 1);
+            scanSensorMsg.Time_increment = lidarSensor.configuration.laserArrayCycleTime;
             scanSensorMsg.Scan_time = 1.0f / lidarSensor.AutomaticCaptureHz;
-            scanSensorMsg.Range_min = 0.02f;  // lidarSensor.configuration.minRange -> LidarSensor should expose min range
+            scanSensorMsg.Range_min = lidarSensor.configuration.minRange;
             scanSensorMsg.Range_max = lidarSensor.configuration.maxRange;
 
             rglSubgraphScan = new RGLNodeSequence()
                 .AddNodePointsFormat("SCAN", FormatLaserScan.GetRGLFields());
             RGLNodeSequence.Connect(rglSubgraphUnity2Ros, rglSubgraphScan);
-
         }
 
         private void OnNewLidarData()
@@ -89,14 +89,12 @@ namespace AWSIM
         private void PublishFormat(Publisher<sensor_msgs.msg.LaserScan> publisher, sensor_msgs.msg.LaserScan msg,
             byte[] data, int hitCount)
         {
-            float[] ranges = new float[lidarSensor.configuration.horizontalSteps];
-            for (var i = 0; i < hitCount; i++)  // RGL does not produce NaNs, thus ray indices have to be taken into account
+            float[] ranges = Enumerable.Repeat(float.NaN, lidarSensor.configuration.HorizontalSteps).ToArray();
+            for (var i = 0; i < hitCount; i++)
             {
-                int idx = lidarSensor.configuration.horizontalSteps - 1 - (int)BitConverter.ToUInt32(data, i * (sizeof(float) + sizeof(UInt32)) + sizeof(float));
+                int idx = lidarSensor.configuration.HorizontalSteps - 1 - (int)BitConverter.ToUInt32(data, i * (sizeof(float) + sizeof(UInt32)) + sizeof(float));
                 float value = BitConverter.ToSingle(data, i * (sizeof(float) + sizeof(UInt32)));
-                if (value >= scanSensorMsg.Range_min) {  // RGL should handle min range
-                    ranges[idx] = value;
-                }
+                ranges[idx] = value;
             }
             var header = msg as MessageWithHeader;
             SimulatorROS2Node.UpdateROSTimestamp(ref header);
