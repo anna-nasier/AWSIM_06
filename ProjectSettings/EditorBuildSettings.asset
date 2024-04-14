@@ -5,7 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/AWSIM/Scenes/Main/AutowareSimulation.unity
     guid: 9a19a6429a390f1428320cff9d4e1f10
+  - enabled: 1
+    path: Assets/AWSIM/Scenes/Main/F1TenthSimulation.unity
+    guid: 5c29c0b3f3a68365a95e27742d76c4da
   m_configObjects: {}

@@ -345,7 +345,7 @@ PrefabInstance:
     - target: {fileID: 4650553132204519453, guid: 3632a05dd40c73d6dac93cfd44edef8b, type: 3}
       propertyPath: m_TerrainData
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 15600000, guid: 1e7769a4ad2691541ba3684d7a5b5482, type: 2}
     - target: {fileID: 5552473036744422342, guid: 3632a05dd40c73d6dac93cfd44edef8b, type: 3}
       propertyPath: m_RootOrder
       value: 0
